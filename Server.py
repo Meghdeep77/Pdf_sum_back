@@ -29,15 +29,19 @@ app.add_middleware(
 async def upload_pdf(file: UploadFile = File(...)):
     try:
         # Save the uploaded file temporarily
+        print("Reached Here")
         with NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
             temp_file.write(await file.read())
             temp_file_path = temp_file.name
 
         # Summarize the PDF
+        print("Made temp file")
         summary = gptapi.summarize_pdf(temp_file_path,Save_to_txt=True)
+        print("summarized")
 
         # Clean up temporary file
         os.remove(temp_file_path)
+        print("Deleted temp file")
 
         return JSONResponse(content={"summary": summary}, status_code=200)
 
