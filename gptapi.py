@@ -19,7 +19,7 @@ prompts['question'] = "From the following text generate various relevant questio
 def split_text_into_chunks(text, max_tokens=3000):
     print("Here")
     sentences = sent_tokenize(text)
-    print("here 2)
+    print("here 2")
     chunks = []
     current_chunk = []
     current_tokens = 0
