@@ -37,7 +37,7 @@ async def upload_pdf(file: UploadFile = File(...)):
 
         # Summarize the PDF
         print("Made temp file")
-        summary = gptapi.summarize_pdf(temp_file_path,Save_to_txt=True)
+        summary = gptapi.summarize_pdf(temp_file_path,Save_to_txt=False)
         print("summarized")
 
         # Clean up temporary file
