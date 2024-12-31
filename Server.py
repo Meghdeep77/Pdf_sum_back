@@ -19,7 +19,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Replace "*" with specific origins for production
+    allow_origins=["pdf-sum.vercel.app"],  # Replace "*" with specific origins for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
