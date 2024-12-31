@@ -56,6 +56,7 @@ def summarize_text_with_api(chunk, max_tokens=3000):
     }
 
     response = requests.post(api_url, headers=headers, json=payload)
+    print("Response recieved")
 
     if response.status_code == 200:
         return response.json()['choices'][0]['message']['content'].strip()
@@ -125,6 +126,7 @@ def gen_ques_from_pdf(pdf_path, Save_to_txt=False):
     return questions
 
 def summarize_pdf(pdf_path, Save_to_txt=False):
+    print(OPENAI_API_KEY)
     extracted_text = ""
 
     try:
@@ -139,6 +141,7 @@ def summarize_pdf(pdf_path, Save_to_txt=False):
         return None
 
     # Split text into manageable chunks
+    print("Extracted Text")
     chunks = split_text_into_chunks(extracted_text, max_tokens=3000)
 
     # Summarize each chunk using OpenAI API
@@ -146,7 +149,7 @@ def summarize_pdf(pdf_path, Save_to_txt=False):
     for idx, chunk in enumerate(chunks):
         print(f"Summarizing chunk {idx + 1}/{len(chunks)}...")
         summary += summarize_text_with_api(chunk) + "\n"
-
+    print("summarized")
     # Optionally save the summary to a text file
     if Save_to_txt:
         try:
