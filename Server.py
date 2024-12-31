@@ -57,7 +57,7 @@ async def gen_ques_pdf(file: UploadFile = File(...)):
             temp_file_path = temp_file.name
 
         # Summarize the PDF
-        summary = gptapi.gen_ques_from_pdf(temp_file_path,Save_to_txt=True)
+        summary = gptapi.gen_ques_from_pdf(temp_file_path,Save_to_txt=False)
 
         # Clean up temporary file
         os.remove(temp_file_path)
