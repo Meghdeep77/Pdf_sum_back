@@ -18,7 +18,13 @@ prompts['qp_dup'] = "Make another question paper following the same format and t
 prompts['question'] = "From the following text generate various relevant questions to test the understanding of the student generate 5 MCQ questions, 5 2 mark questions 5 3 mark questions and 5 5 mark questions "
 # Function to split text into manageable chunks
 def split_text_into_chunks(text, max_tokens=3000):
-    sentences = sent_tokenize(text)
+    try:
+        # Attempt to tokenize the text into sentences
+        sentences = sent_tokenize(text)
+    except Exception as e:
+        # Print the error and return an empty list if tokenization fails
+        print(f"An error occurred during sentence tokenization: {e}")
+        return []
     chunks = []
     current_chunk = []
     current_tokens = 0
