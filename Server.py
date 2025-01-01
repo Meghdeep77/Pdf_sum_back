@@ -20,7 +20,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://pdf-3ksf2wy8v-meghdeeps-projects-e6686e85.vercel.app"],  # Replace "*" with specific origins for production
+    allow_origins=["*"],  # Replace "*" with specific origins for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
