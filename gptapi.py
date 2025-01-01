@@ -4,17 +4,11 @@ import requests
 from dotenv import load_dotenv
 from nltk.tokenize import sent_tokenize
 import nltk
+import re
 from pptx import Presentation
 
 # Load necessary components
-
-
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    print("Downloading 'punkt' tokenizer...")
-    nltk.download('punkt')
- # Ensure 'punkt' data is downloaded
+nltk.download('punkt')  # Ensure 'punkt' data is downloaded
 load_dotenv()  # Load environment variables from .env file
 
 # Get OpenAI API Key from .env file
@@ -24,14 +18,11 @@ prompts['exam_sum'] = "Summarize the following text in order to prepare for an e
 prompts['qp_dup'] = "Make another question paper following the same format and the same level of difficulty for the same subject, keep the ratio of theory to numerical/coding questions the same "
 prompts['question'] = "From the following text generate various relevant questions to test the understanding of the student generate 5 MCQ questions, 5 2 mark questions 5 3 mark questions and 5 5 mark questions "
 # Function to split text into manageable chunks
+
+
 def split_text_into_chunks(text, max_tokens=3000):
-    try:
-        # Attempt to tokenize the text into sentences
-        sentences = sent_tokenize(text)
-    except Exception as e:
-        # Print the error and return an empty list if tokenization fails
-        print(f"An error occurred during sentence tokenization: {e}")
-        return []
+    # Split text into sentences using a regular expression
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
     chunks = []
     current_chunk = []
     current_tokens = 0
@@ -42,6 +33,7 @@ def split_text_into_chunks(text, max_tokens=3000):
             current_chunk.append(sentence)
             current_tokens += sentence_tokens
         else:
+            # Combine sentences into a chunk and reset the current chunk
             chunks.append(" ".join(current_chunk))
             current_chunk = [sentence]
             current_tokens = sentence_tokens
@@ -50,6 +42,7 @@ def split_text_into_chunks(text, max_tokens=3000):
         chunks.append(" ".join(current_chunk))
 
     return chunks
+
 
 # Function to summarize text using OpenAI API endpoint
 def summarize_text_with_api(chunk, max_tokens=3000):
