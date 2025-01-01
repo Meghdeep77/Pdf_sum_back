@@ -4,6 +4,7 @@ import requests
 from dotenv import load_dotenv
 from nltk.tokenize import sent_tokenize
 import nltk
+from pptx import Presentation
 
 # Load necessary components
 nltk.download('punkt')  # Ensure 'punkt' data is downloaded
@@ -17,9 +18,7 @@ prompts['qp_dup'] = "Make another question paper following the same format and t
 prompts['question'] = "From the following text generate various relevant questions to test the understanding of the student generate 5 MCQ questions, 5 2 mark questions 5 3 mark questions and 5 5 mark questions "
 # Function to split text into manageable chunks
 def split_text_into_chunks(text, max_tokens=3000):
-    print("Here")
     sentences = sent_tokenize(text)
-    print("here 2")
     chunks = []
     current_chunk = []
     current_tokens = 0
@@ -36,7 +35,7 @@ def split_text_into_chunks(text, max_tokens=3000):
 
     if current_chunk:
         chunks.append(" ".join(current_chunk))
-    print("There")
+
     return chunks
 
 # Function to summarize text using OpenAI API endpoint
@@ -48,7 +47,7 @@ def summarize_text_with_api(chunk, max_tokens=3000):
     }
 
     payload = {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4o-mini",
         "messages": [
             {"role": "system", "content": "You are an expert summarizer."},
             {"role": "user", "content": f"{prompts['exam_sum']}:\n\n{chunk}"}
@@ -58,7 +57,6 @@ def summarize_text_with_api(chunk, max_tokens=3000):
     }
 
     response = requests.post(api_url, headers=headers, json=payload)
-    print("Response recieved")
 
     if response.status_code == 200:
         return response.json()['choices'][0]['message']['content'].strip()
@@ -112,7 +110,7 @@ def gen_ques_from_pdf(pdf_path, Save_to_txt=False):
     # Summarize each chunk using OpenAI API
     questions = ""
     for idx, chunk in enumerate(chunks):
-        print(f"Summarizing chunk {idx + 1}/{len(chunks)}...")
+        print(f"Generating Questions chunk {idx + 1}/{len(chunks)}...")
         questions += generate_questions_with_api(chunk) + "\n"
 
     # Optionally save the summary to a text file
@@ -128,7 +126,6 @@ def gen_ques_from_pdf(pdf_path, Save_to_txt=False):
     return questions
 
 def summarize_pdf(pdf_path, Save_to_txt=False):
-    print(OPENAI_API_KEY)
     extracted_text = ""
 
     try:
@@ -143,7 +140,6 @@ def summarize_pdf(pdf_path, Save_to_txt=False):
         return None
 
     # Split text into manageable chunks
-    print("Extracted Text")
     chunks = split_text_into_chunks(extracted_text, max_tokens=3000)
 
     # Summarize each chunk using OpenAI API
@@ -151,7 +147,7 @@ def summarize_pdf(pdf_path, Save_to_txt=False):
     for idx, chunk in enumerate(chunks):
         print(f"Summarizing chunk {idx + 1}/{len(chunks)}...")
         summary += summarize_text_with_api(chunk) + "\n"
-    print("summarized")
+
     # Optionally save the summary to a text file
     if Save_to_txt:
         try:
@@ -164,6 +160,65 @@ def summarize_pdf(pdf_path, Save_to_txt=False):
 
     return summary
 
+def summarize_ppt(ppt_path):
+    """Extract text from a PowerPoint and summarize it."""
+    extracted_text = ""
+
+    try:
+        presentation = Presentation(ppt_path)
+        for slide in presentation.slides:
+            for shape in slide.shapes:
+                if shape.has_text_frame:
+                    extracted_text += shape.text.strip() + "\n"
+    except Exception as e:
+        print(f"An error occurred while reading the PowerPoint: {e}")
+        return None
+
+    # Split text into manageable chunks
+    chunks = split_text_into_chunks(extracted_text, max_tokens=3000)
+
+    # Summarize each chunk using OpenAI API
+    summary = ""
+    for idx, chunk in enumerate(chunks):
+        print(f"Summarizing chunk {idx + 1}/{len(chunks)}...")
+        summary += summarize_text_with_api(chunk) + "\n"
+
+    return summary
+
+def gen_ques_from_ppt(ppt_path, Save_to_txt=False):
+    """Extract text from a PowerPoint and generate questions."""
+    extracted_text = ""
+
+    try:
+        presentation = Presentation(ppt_path)
+        for slide in presentation.slides:
+            for shape in slide.shapes:
+                if shape.has_text_frame:
+                    extracted_text += shape.text.strip() + "\n"
+    except Exception as e:
+        print(f"An error occurred while reading the PowerPoint: {e}")
+        return None
+
+    # Split text into manageable chunks
+    chunks = split_text_into_chunks(extracted_text, max_tokens=3000)
+
+    # Generate questions for each chunk using the API
+    questions = ""
+    for idx, chunk in enumerate(chunks):
+        print(f"Generating questions for chunk {idx + 1}/{len(chunks)}...")
+        questions += generate_questions_with_api(chunk) + "\n"
+
+    # Optionally save the questions to a text file
+    if Save_to_txt:
+        try:
+            output_file = f"{os.path.splitext(ppt_path)[0]}_questions.txt"
+            with open(output_file, 'w') as file:
+                file.write(questions)
+            print(f"Questions have been saved to {output_file}")
+        except Exception as e:
+            print(f"An error occurred while saving the questions: {e}")
+
+    return questions
 
 #pdf_path = "example.pdf"
 #summary = summarize_pdf(pdf_path, Save_to_txt=True)
