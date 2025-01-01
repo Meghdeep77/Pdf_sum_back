@@ -7,7 +7,14 @@ import nltk
 from pptx import Presentation
 
 # Load necessary components
-nltk.download('punkt')  # Ensure 'punkt' data is downloaded
+
+
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    print("Downloading 'punkt' tokenizer...")
+    nltk.download('punkt')
+ # Ensure 'punkt' data is downloaded
 load_dotenv()  # Load environment variables from .env file
 
 # Get OpenAI API Key from .env file
