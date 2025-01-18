@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey,DateTime
 from sqlalchemy.orm import relationship
 from database import Base
+from datetime import datetime
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
@@ -23,6 +24,7 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
+    registered_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationship with Subscription table
     subscription = relationship("Subscription", back_populates="user", uselist=False)

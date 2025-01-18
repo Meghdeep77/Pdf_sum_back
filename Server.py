@@ -64,8 +64,7 @@ async def upload_pdf(file: UploadFile = File(...), user_id: str = Form(...),db: 
 
         # Summarize the PDF
         summary, tokens = gptapi.summarize_pdf(temp_file_path, Save_to_txt=True)
-        print(tokens)
-        print(user_id_int)
+
 
         # Update tokens in subscription table
         try:
@@ -83,16 +82,27 @@ async def upload_pdf(file: UploadFile = File(...), user_id: str = Form(...),db: 
 
 
 @app.post("/summarize_ppt/")
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_ppt(file: UploadFile = File(...), user_id: str = Form(...), db: Session = Depends(get_db)):
     try:
+        # Validate and convert user ID
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid user ID format")
+
         # Save the uploaded file temporarily
-        with NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+        with NamedTemporaryFile(delete=False, suffix=".pptx") as temp_file:
             temp_file.write(await file.read())
             temp_file_path = temp_file.name
 
-        # Summarize the PDF
-        summary,tokens = gptapi.summarize_ppt(temp_file_path)
+        # Summarize the PowerPoint
+        summary, tokens = gptapi.summarize_ppt(temp_file_path, Save_to_txt=True)
 
+        # Update tokens in subscription table
+        try:
+            utils.update_tokens(user_id_int, tokens, db)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to update tokens: {str(e)}")
 
         # Clean up temporary file
         os.remove(temp_file_path)
@@ -100,45 +110,90 @@ async def upload_pdf(file: UploadFile = File(...)):
         return JSONResponse(content={"summary": summary}, status_code=200)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-@app.post("/gen_ques_pdf/")
-async def gen_ques_pdf(file: UploadFile = File(...)):
+
+
+
+@app.post("/gen_ques_pdf")
+async def gen_ques_pdf(
+    file: UploadFile = File(...),
+    user_id: str = Form(...),
+    db: Session = Depends(get_db)
+):
     try:
+
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid user ID format")
+
         # Save the uploaded file temporarily
-        with NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
-            temp_file.write(await file.read())
-            temp_file_path = temp_file.name
+        temp_file_path = None
+        try:
+            with NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+                temp_file.write(await file.read())
+                temp_file_path = temp_file.name
 
-        # Summarize the PDF
-        summary = gptapi.gen_ques_from_pdf(temp_file_path,Save_to_txt=True)
+            # Generate questions from the PDF
+            try:
+                summary, tokens = gptapi.gen_ques_from_pdf(temp_file_path)
 
-        # Clean up temporary file
-        os.remove(temp_file_path)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to generate questions: {str(e)}")
 
-        return JSONResponse(content={"summary": summary}, status_code=200)
+            # Update tokens in subscription table
+            try:
+                utils.update_tokens(user_id_int, tokens, db)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to update tokens: {str(e)}")
 
+            # Return the generated questions
+            return JSONResponse(content={"questions": summary, "tokens_used": tokens}, status_code=200)
+
+        finally:
+            # Clean up the temporary file
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+
+    except HTTPException as http_exc:
+        raise http_exc  # Reraise HTTP exceptions to keep status codes intact
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+        # Catch all other exceptions
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+
 
 @app.post("/gen_ques_ppt/")
-async def gen_ques_ppt(file: UploadFile = File(...)):
+async def gen_ques_ppt(file: UploadFile = File(...), user_id: str = Form(...), db: Session = Depends(get_db)):
     try:
+        # Validate and convert user ID
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid user ID format")
+
         # Save the uploaded file temporarily
-        with NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+        with NamedTemporaryFile(delete=False, suffix=".pptx") as temp_file:
             temp_file.write(await file.read())
             temp_file_path = temp_file.name
 
-        # Summarize the PDF
-        summary = gptapi.gen_ques_from_ppt(temp_file_path,Save_to_txt=True)
+        # Generate questions from the PowerPoint
+        summary, tokens = gptapi.gen_ques_from_ppt(temp_file_path, Save_to_txt=False)
+
+        # Update tokens in subscription table
+        try:
+
+            utils.update_tokens(user_id_int, tokens, db)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to update tokens: {str(e)}")
 
         # Clean up temporary file
         os.remove(temp_file_path)
 
-        return JSONResponse(content={"summary": summary}, status_code=200)
+        return JSONResponse(content={"questions": summary}, status_code=200)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 @app.get("/")
 def root():

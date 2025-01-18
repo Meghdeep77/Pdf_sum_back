@@ -2,14 +2,13 @@ import PyPDF2
 import os
 import requests
 from dotenv import load_dotenv
-from nltk.tokenize import sent_tokenize
-import nltk
+
 import re
 from pptx import Presentation
 import tiktoken
 
 # Load necessary components
-nltk.download('punkt')  # Ensure 'punkt' data is downloaded
+  # Ensure 'punkt' data is downloaded
 load_dotenv()  # Load environment variables from .env file
 encoder = tiktoken.encoding_for_model("gpt-4o-mini")
 # Get OpenAI API Key from .env file
@@ -91,7 +90,7 @@ def generate_questions_with_api(chunk, max_tokens=3000):
     response = requests.post(api_url, headers=headers, json=payload)
 
     if response.status_code == 200:
-        return response.json()['choices'][0]['message']['content'].strip()
+        return response.json()['choices'][0]['message']['content'].strip(),count_tokens(chunk)
     else:
         print(f"Error: {response.status_code} - {response.text}")
         return "[Error occurred during summarization]"
@@ -99,14 +98,14 @@ def generate_questions_with_api(chunk, max_tokens=3000):
 
 def gen_ques_from_pdf(pdf_path, Save_to_txt=False):
     extracted_text = ""
-
+    total_tokens_used = 0
     try:
         with open(pdf_path, 'rb') as pdf_file:
             reader = PyPDF2.PdfReader(pdf_file)
             for page in reader.pages:
                 text = page.extract_text()
                 extracted_text += text.strip() if text else "[No text found on this page]\n"
-
+        print(extracted_text)
     except Exception as e:
         print(f"An error occurred while reading the PDF: {e}")
         return None
@@ -118,19 +117,14 @@ def gen_ques_from_pdf(pdf_path, Save_to_txt=False):
     questions = ""
     for idx, chunk in enumerate(chunks):
         print(f"Generating Questions chunk {idx + 1}/{len(chunks)}...")
-        questions += generate_questions_with_api(chunk) + "\n"
+        chunk_questions, chunk_tokens = generate_questions_with_api(chunk)
+        questions += chunk_questions + "\n"
+        total_tokens_used += chunk_tokens
 
     # Optionally save the summary to a text file
-    if Save_to_txt:
-        try:
-            output_file = f"{os.path.splitext(pdf_path)[0]}_questions.txt"
-            with open(output_file, 'w') as file:
-                file.write(questions)
-            print(f"Summary has been saved to {output_file}")
-        except Exception as e:
-            print(f"An error occurred while saving the summary: {e}")
 
-    return questions
+
+    return questions,total_tokens_used
 
 def summarize_pdf(pdf_path, Save_to_txt=False):
     extracted_text = ""
@@ -209,6 +203,7 @@ def summarize_ppt(ppt_path, Save_to_txt=False):
 def gen_ques_from_ppt(ppt_path, Save_to_txt=False):
     """Extract text from a PowerPoint and generate questions."""
     extracted_text = ""
+    total_tokens_used=0
 
     try:
         presentation = Presentation(ppt_path)
@@ -227,7 +222,9 @@ def gen_ques_from_ppt(ppt_path, Save_to_txt=False):
     questions = ""
     for idx, chunk in enumerate(chunks):
         print(f"Generating questions for chunk {idx + 1}/{len(chunks)}...")
-        questions += generate_questions_with_api(chunk) + "\n"
+        chunk_questions,chunk_tokens= generate_questions_with_api(chunk)
+        questions += chunk_questions + "\n"
+        total_tokens_used += chunk_tokens
 
     # Optionally save the questions to a text file
     if Save_to_txt:
@@ -239,7 +236,7 @@ def gen_ques_from_ppt(ppt_path, Save_to_txt=False):
         except Exception as e:
             print(f"An error occurred while saving the questions: {e}")
 
-    return questions
+    return questions,total_tokens_used
 
 #pdf_path = "example.pdf"
 #summary = summarize_pdf(pdf_path, Save_to_txt=True)
