@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # Command to run the application
-CMD ["uvicorn", "Server:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "Server:app", "--host", "0.0.0.0", "--port", "3000"]
