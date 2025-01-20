@@ -26,7 +26,7 @@ app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Replace "*" with specific origins for production
+    allow_origins=["*"],  # Replace "*" with specific origins for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
