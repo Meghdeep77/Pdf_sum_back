@@ -26,7 +26,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace "*" with specific origins for production
+    allow_origins=["https://pdf.defmogu.in"],  # Replace "*" with specific origins for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
