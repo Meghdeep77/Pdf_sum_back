@@ -206,7 +206,7 @@ async def gen_ques_ppt(file: UploadFile = File(...), user_id: str = Form(...), d
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to the PDF Summarizer API!"}
+    return {"message": "Welcome to the PDF Summarizer API! The real Deal !"}
 
 @app.post("/register", status_code=201)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
