@@ -67,7 +67,7 @@ async def upload_pdf(file: UploadFile = File(...), user_id: str = Form(...),db: 
             temp_file_path = temp_file.name
 
         # Summarize the PDF
-        summary, tokens = gptapi.summarize_pdf(temp_file_path, Save_to_txt=True)
+        summary, tokens = gptapi.summarize_pdf(temp_file_path, Save_to_txt=False)
 
 
         # Update tokens in subscription table
@@ -101,7 +101,7 @@ async def upload_ppt(file: UploadFile = File(...), user_id: str = Form(...), db:
             temp_file_path = temp_file.name
 
         # Summarize the PowerPoint
-        summary, tokens = gptapi.summarize_ppt(temp_file_path, Save_to_txt=True)
+        summary, tokens = gptapi.summarize_ppt(temp_file_path, Save_to_txt=False)
 
         # Update tokens in subscription table
         try:
