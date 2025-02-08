@@ -52,7 +52,7 @@ class UserCreate(BaseModel):
     password: constr(min_length=8)
 
 
-@app.post("/summarize_pdf/")
+@app.post("/summarize_pdf")
 async def upload_pdf(file: UploadFile = File(...), user_id: str = Form(...),db: Session = Depends(get_db)):
     try:
 
@@ -86,7 +86,7 @@ async def upload_pdf(file: UploadFile = File(...), user_id: str = Form(...),db: 
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
-@app.post("/summarize_ppt/")
+@app.post("/summarize_ppt")
 async def upload_ppt(file: UploadFile = File(...), user_id: str = Form(...), db: Session = Depends(get_db)):
     try:
         # Validate and convert user ID
@@ -171,7 +171,7 @@ async def gen_ques_pdf(
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
 
-@app.post("/gen_ques_ppt/")
+@app.post("/gen_ques_ppt")
 async def gen_ques_ppt(file: UploadFile = File(...), user_id: str = Form(...), db: Session = Depends(get_db)):
     try:
         # Validate and convert user ID
