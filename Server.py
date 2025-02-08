@@ -6,7 +6,7 @@ from PyPDF2 import PdfReader
 import openai
 import os
 from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, constr
 from starlette.responses import JSONResponse
@@ -16,14 +16,14 @@ from models import User,Subscription
 import utils
 import gptapi
 from authentication import router as auth_router
+from payment import router as pay_router
 
 # Load environment variables
+
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
-app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Replace "*" with specific origins for production
@@ -31,6 +31,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+app.include_router(pay_router, prefix="/pay", tags=["Payment"])
+
+
 Base.metadata.create_all(bind=engine)
 
 # Dependency to get DB session
@@ -69,6 +73,7 @@ async def upload_pdf(file: UploadFile = File(...), user_id: str = Form(...),db: 
         # Update tokens in subscription table
         try:
             utils.update_tokens(user_id_int, tokens,db)
+            utils.update_uses(user_id_int, tokens,db)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to update tokens: {str(e)}")
 
@@ -101,6 +106,8 @@ async def upload_ppt(file: UploadFile = File(...), user_id: str = Form(...), db:
         # Update tokens in subscription table
         try:
             utils.update_tokens(user_id_int, tokens, db)
+            utils.update_uses(user_id_int, tokens, db)
+
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to update tokens: {str(e)}")
 
@@ -145,6 +152,7 @@ async def gen_ques_pdf(
             # Update tokens in subscription table
             try:
                 utils.update_tokens(user_id_int, tokens, db)
+                utils.update_uses(user_id_int, tokens, db)
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Failed to update tokens: {str(e)}")
 
@@ -184,6 +192,7 @@ async def gen_ques_ppt(file: UploadFile = File(...), user_id: str = Form(...), d
         try:
 
             utils.update_tokens(user_id_int, tokens, db)
+            utils.update_uses(user_id_int, tokens, db)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to update tokens: {str(e)}")
 
@@ -222,7 +231,8 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
             id=new_user.id,  # Associate with the newly created user
             subscription=False,  # Default subscription status
             tokens_used=0,
-            free_trial_used =False# Initialize tokens used to 0
+            free_trial_used =False,
+            uses=0# Initialize tokens used to 0
         )
         db.add(new_subscription)
         db.commit()

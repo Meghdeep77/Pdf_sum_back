@@ -10,6 +10,8 @@ from starlette import status
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
+
+import utils
 from database import Base, engine, SessionLocal
 from models import User
 
@@ -39,6 +41,7 @@ class Token(BaseModel):
 router = APIRouter()
 
 # Function to authenticate user
+db: Session = Depends(get_db)
 def authenticate_user(username: str, password: str, db: Session):
     # Query the database for the user
     user = db.query(User).filter(User.username == username).first()
@@ -78,14 +81,16 @@ async def login_for_access_token(
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 @router.get("/user/me")
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme),db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         id = payload.get("id")
         print(username, id)
+        access = utils.get_access(int(id),db)
+        sub = utils.get_sub(int(id),db)
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return {"username": username , "id": id}
+        return {"username": username , "id": id, "access" : access, "sub": sub}
     except JWTError:
         raise HTTPException(status_code=401, detail="Could not validate token")
