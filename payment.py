@@ -60,7 +60,7 @@ def pay(user_id: str = Form(...), db: Session = Depends(get_db)):
         "merchantTransactionId": merchant_transaction_id,
         "merchantUserId": str(user_id),
         "amount": 10000,
-        "redirectUrl": "http://localhost:5173/status",
+        "redirectUrl": "https://pdf.defmogu.in/status",
         "redirectMode": "REDIRECT",
         "callbackUrl": "http://127.0.0.1:8080/pay/callback",
         "mobileNumber": "9999999999",
