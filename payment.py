@@ -83,7 +83,7 @@ def pay(user_id: str = Form(...), db: Session = Depends(get_db)):
     }
     json_data = {'request': base64String}
 
-    response = requests.post('https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay',
+    response = requests.post('https://api.phonepe.com/apis/hermes/pg/v1/pay',
                              headers=headers, json=json_data)
     responseData = response.json()
     print(responseData)
