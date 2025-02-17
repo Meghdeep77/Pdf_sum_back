@@ -12,9 +12,11 @@ from fastapi import APIRouter, Depends
 import hashlib
 from database import Base, engine, SessionLocal
 from models import User,Subscription
+import os
 
-PHONEPE_BASE_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox"
-SALT_KEY = "96434309-7796-489d-8924-ab56988a6076"
+PHONEPE_BASE_URL = "https://api.phonepe.com/apis/hermes"
+SALTKEY = os.getenv("SALTKEY")
+MERCHANT_ID = os.getenv("MERCHANT_ID")
 SALT_INDEX = "1"
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def get_db():
@@ -120,12 +122,12 @@ def hash_password(password):
 
 def check_transaction_status( merchant_transaction_id: str):
     try:
-        merchant_id: str = "PGTESTPAYUAT86"
+        merchant_id: str = MERCHANT_ID
         # Construct the URL with Merchant ID & Transaction ID
         url = f"{PHONEPE_BASE_URL}/pg/v1/status/{merchant_id}/{merchant_transaction_id}"
 
         # Generate the X-VERIFY checksum
-        data_to_hash = f"/pg/v1/status/{merchant_id}/{merchant_transaction_id}{SALT_KEY}"
+        data_to_hash = f"/pg/v1/status/{merchant_id}/{merchant_transaction_id}{SALTKEY}"
         sha256_hash = hashlib.sha256(data_to_hash.encode()).hexdigest()
         checksum = f"{sha256_hash}###{SALT_INDEX}"
 
