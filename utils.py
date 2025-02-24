@@ -13,10 +13,13 @@ import hashlib
 from database import Base, engine, SessionLocal
 from models import User,Subscription
 import os
-
-PHONEPE_BASE_URL = "https://api.phonepe.com/apis/hermes"
+from dotenv import load_dotenv
+load_dotenv()
+PHONEPE_BASE_URL = os.getenv('URL')
 SALTKEY = os.getenv("SALTKEY")
 MERCHANT_ID = os.getenv("MERCHANT_ID")
+print(MERCHANT_ID)
+print(SALTKEY)
 SALT_INDEX = "1"
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def get_db():
@@ -125,7 +128,7 @@ def check_transaction_status( merchant_transaction_id: str):
         merchant_id: str = MERCHANT_ID
         # Construct the URL with Merchant ID & Transaction ID
         url = f"{PHONEPE_BASE_URL}/pg/v1/status/{merchant_id}/{merchant_transaction_id}"
-
+        print(url)
         # Generate the X-VERIFY checksum
         data_to_hash = f"/pg/v1/status/{merchant_id}/{merchant_transaction_id}{SALTKEY}"
         sha256_hash = hashlib.sha256(data_to_hash.encode()).hexdigest()
@@ -135,7 +138,8 @@ def check_transaction_status( merchant_transaction_id: str):
         headers = {
             "accept": "application/json",
             "Content-Type": "application/json",
-            "X-VERIFY": checksum
+            "X-VERIFY": checksum,
+            "X-MERCHANT-ID" : MERCHANT_ID,
         }
 
         # Send GET request to check transaction status
@@ -148,3 +152,5 @@ def check_transaction_status( merchant_transaction_id: str):
     except Exception as e:
         return {"error": str(e)}
 
+print(MERCHANT_ID)
+print(check_transaction_status("8iH9NCs2qGxUNb4JfF4Ynm4"))
